@@ -3,7 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-
+using System.IO.Ports;
+//using System.IO.
 
 public class DataManager : MonoBehaviour
 {
@@ -19,13 +20,15 @@ public class DataManager : MonoBehaviour
 
     public DroneUnit CurrentData => units[current];
 
+    public int NextIndex => units.Count + 1;
+
     public bool fakeData = true;
      
     void Start()
     {
         if (units.Count == 0)
         {
-            units.Add(new DroneUnit(units.Count + 1, DateTime.Now));
+            units.Add(new DroneUnit(NextIndex, DateTime.Now));
         }
     }
 
@@ -40,7 +43,7 @@ public class DataManager : MonoBehaviour
         while (fakeData)
         {
             yield return new WaitForSeconds(2);
-            units.Add(DroneUnit.Random(units.Count + 1, units[units.Count - 1]));
+            units.Add(DroneUnitSerializer.Random(NextIndex, units[units.Count - 1]));
             current++;
         }
     }
@@ -48,7 +51,7 @@ public class DataManager : MonoBehaviour
     public void Clear()
     {
         units.Clear();
-        units.Add(new DroneUnit(units.Count + 1, DateTime.Now));
+        units.Add(new DroneUnit(NextIndex, DateTime.Now));
         current = 0;
     }
     public void Exit()
@@ -76,19 +79,19 @@ public class DataManager : MonoBehaviour
 [Serializable]
 public struct DroneUnit
 {
-    // Unix Time: Selisih detik dari 1 Januari 1970
+    // Unix Time: Selisih detik dari 1 Januari 1970 UTC
     public int index;
     public long unixTime;
     public float pitch, yaw, roll;
     public float accX, accY, accZ;
     public float magX, magY, magZ;
-    public float lat, lng, alt;
-    public float temp, pressure;
+    public double lat, lng;
+    public float alt, temp, pressure;
 
     public Vector3 YawPitchRoll => new Vector3(pitch, yaw, roll);
     public Vector3 Acceleration => new Vector3(accX, accY, accZ);
     public Vector3 Magnitudo => new Vector3(magX, magY, magZ);
-    public Vector3 LonLat => new Vector2(lng, lat);
+    public Vector3 LonLat => new Vector2((float)lng, (float)lat);
 
     public DateTime DateTime => DateTimeOffset.FromUnixTimeSeconds(unixTime).DateTime;
 
@@ -110,6 +113,47 @@ public struct DroneUnit
         alt = 0;
         temp = 0;
         pressure = 0;
+    }
+
+}
+
+public static class DroneUnitSerializer
+{
+    public static DroneUnit Parse(string line)
+    {
+        var units = line.Trim(' ', '\r', '\n', '\t').Replace(" ", "").Split(',');
+        var unit = new DroneUnit
+        {
+            index = int.Parse(units[0]),
+            unixTime = long.Parse(units[1]),
+            pitch = float.Parse(units[2]),
+            yaw = float.Parse(units[3]),
+            roll = float.Parse(units[4]),
+            accX = float.Parse(units[5]),
+            accY = float.Parse(units[6]),
+            accZ = float.Parse(units[7]),
+            magX = float.Parse(units[8]),
+            magY = float.Parse(units[9]),
+            magZ = float.Parse(units[10]),
+            lat = double.Parse(units[11]),
+            lng = double.Parse(units[12]),
+            alt = float.Parse(units[13]),
+            temp = float.Parse(units[14]),
+            pressure = float.Parse(units[15])
+        };
+        return unit;
+    }
+
+    public static string Stringify(DroneUnit unit)
+    {
+        return string.Join(",", new string[] {
+            unit.index.ToString(), unit.unixTime.ToString(),
+            unit.pitch.ToString(), unit.yaw.ToString(), unit.roll.ToString(),
+            unit.accX.ToString(), unit.accY.ToString(), unit.accZ.ToString(),
+            unit.magX.ToString(), unit.magY.ToString(), unit.magZ.ToString(),
+            unit.lat.ToString(), unit.lng.ToString(), unit.alt.ToString(),
+            unit.temp.ToString(), unit.pressure.ToString()
+        });
     }
 
     /// <summary> Generate Fake Data </summary>
@@ -137,52 +181,12 @@ public struct DroneUnit
             magX = randDegree(rndseed.magX),
             magY = randDegree(rndseed.magY),
             magZ = randDegree(rndseed.magZ),
-            lat = randDegree(rndseed.lat),
-            lng = randDegree(rndseed.lng),
+            lat = randDegree((float)rndseed.lat),
+            lng = randDegree((float)rndseed.lng),
             alt = randDist(rndseed.alt),
             temp = randDist(rndseed.pitch),
             pressure = randDist(rndseed.pitch)
         };
         return unit;
-    }
-}
-
-public static class DroneUnitSerializer
-{
-    public static DroneUnit Parse(string line)
-    {
-        var units = line.Replace(" ", "").Split(',');
-        var unit = new DroneUnit
-        {
-            index = int.Parse(units[0]),
-            unixTime = long.Parse(units[1]),
-            pitch = float.Parse(units[2]),
-            yaw = float.Parse(units[3]),
-            roll = float.Parse(units[4]),
-            accX = float.Parse(units[5]),
-            accY = float.Parse(units[6]),
-            accZ = float.Parse(units[7]),
-            magX = float.Parse(units[8]),
-            magY = float.Parse(units[9]),
-            magZ = float.Parse(units[10]),
-            lat = float.Parse(units[11]),
-            lng = float.Parse(units[12]),
-            alt = float.Parse(units[13]),
-            temp = float.Parse(units[14]),
-            pressure = float.Parse(units[15])
-        };
-        return unit;
-    }
-
-    public static string Stringify(DroneUnit unit)
-    {
-        return string.Join(",", new string[] {
-            unit.index.ToString(), unit.unixTime.ToString(),
-            unit.pitch.ToString(), unit.yaw.ToString(), unit.roll.ToString(),
-            unit.accX.ToString(), unit.accY.ToString(), unit.accZ.ToString(),
-            unit.magX.ToString(), unit.magY.ToString(), unit.magZ.ToString(),
-            unit.lat.ToString(), unit.lng.ToString(), unit.alt.ToString(),
-            unit.temp.ToString(), unit.pressure.ToString()
-        });
     }
 }

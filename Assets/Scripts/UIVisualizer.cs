@@ -25,7 +25,7 @@ public class UIVisualizer : MonoBehaviour
         public UILineRenderer pitch, yaw, roll;
         public UILineRenderer accX, accY, accZ;
         public UILineRenderer magX, magY, magZ;
-
+        public UILineRenderer lonlat;
         public int samplesWidth = 10;
     }
 
@@ -45,20 +45,20 @@ public class UIVisualizer : MonoBehaviour
 
         textUI.index.text = data.index.ToString();
         textUI.datetime.text = data.DateTime.ToLongTimeString();
-        textUI.pitch.text = data.pitch.ToString("0.0");
-        textUI.yaw.text = data.yaw.ToString("0.0");
-        textUI.roll.text = data.roll.ToString("0.0");
-        textUI.accX.text = data.accX.ToString("0.0");
-        textUI.accY.text = data.accY.ToString("0.0");
-        textUI.accZ.text = data.accZ.ToString("0.0");
-        textUI.magX.text = data.magX.ToString("0.0");
-        textUI.magY.text = data.magY.ToString("0.0");
-        textUI.magZ.text = data.magZ.ToString("0.0");
-        textUI.lat.text = data.lat.ToString("0.0");
-        textUI.lng.text = data.lng.ToString("0.0");
-        textUI.alt.text = data.alt.ToString("0.0");
-        textUI.temp.text = data.temp.ToString("0.0");
-        textUI.pressure.text = data.pressure.ToString("0.0");
+        textUI.pitch.text = data.pitch.ToString("0.0°");
+        textUI.yaw.text = data.yaw.ToString("0.0°");
+        textUI.roll.text = data.roll.ToString("0.0°");
+        textUI.accX.text = data.accX.ToString("0.0°");
+        textUI.accY.text = data.accY.ToString("0.0°");
+        textUI.accZ.text = data.accZ.ToString("0.0°");
+        textUI.magX.text = data.magX.ToString("0.0°");
+        textUI.magY.text = data.magY.ToString("0.0°");
+        textUI.magZ.text = data.magZ.ToString("0.0°");
+        textUI.lat.text = data.lat.ToString("0.000°");
+        textUI.lng.text = data.lng.ToString("0.000°");
+        textUI.alt.text = data.alt.ToString("0.0 m");
+        textUI.temp.text = data.temp.ToString("0.0 °C");
+        textUI.pressure.text = data.pressure.ToString("0.0 hPa");
 
         table.UpdateContent();
         table.SetSelected(data.index);
