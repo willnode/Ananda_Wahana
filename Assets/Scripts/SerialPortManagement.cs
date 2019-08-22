@@ -55,7 +55,7 @@ public class SerialPortManagement : MonoBehaviour
             serialPort.ErrorReceived += SerialPort_ErrorReceived;
             serialPort.PinChanged += SerialPort_PinChanged;
             serialPort.Open();
-            UpdateStatus("<color=green>Koneksi OK</color>");
+            UpdateStatus("<color=lime>Koneksi OK</color>");
         }
     }
 

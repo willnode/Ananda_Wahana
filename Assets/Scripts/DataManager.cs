@@ -16,9 +16,17 @@ public class DataManager : MonoBehaviour
     /// <summary>
     /// Index data yang ditampilkan sekarang
     /// </summary>
-    public int current = 0;
+    [NonSerialized]
+    public int current = -1;
 
-    public DroneUnit CurrentData => units[current];
+    public DroneUnit CurrentData => current < 0 ? new DroneUnit(0, DateTime.Now) : units[current];
+
+    public void PushData(DroneUnit unit)
+    {
+        unit.index = NextIndex;
+        units.Add(unit);
+        current++;
+    }
 
     public int NextIndex => units.Count + 1;
 
@@ -26,14 +34,11 @@ public class DataManager : MonoBehaviour
      
     void Start()
     {
-        if (units.Count == 0)
-        {
-            units.Add(new DroneUnit(NextIndex, DateTime.Now));
-        }
     }
 
     void OnEnable()
     {
+        current = units.Count - 1;
         if (fakeData)
             StartCoroutine(AddFakeData());
     }
@@ -43,17 +48,17 @@ public class DataManager : MonoBehaviour
         while (fakeData)
         {
             yield return new WaitForSeconds(2);
-            units.Add(DroneUnitSerializer.Random(NextIndex, units[units.Count - 1]));
-            current++;
+            PushData(DroneUnitSerializer.Random(NextIndex, CurrentData));
         }
     }
 
     public void Clear()
     {
         units.Clear();
-        units.Add(new DroneUnit(NextIndex, DateTime.Now));
-        current = 0;
+        current = -1;
     }
+
+
     public void Exit()
     {
 #if UNITY_EDITOR
