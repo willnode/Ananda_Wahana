@@ -63,6 +63,11 @@ public class DataManager : MonoBehaviour
 #endif
     }
 
+    public void Fullscreen(bool goFull)
+    {
+        Screen.fullScreen = goFull;
+    }
+
     public void Import(string file)
     {
         var text = File.ReadAllText(file);

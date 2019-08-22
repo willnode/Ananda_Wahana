@@ -25,13 +25,22 @@ public class UIVisualizer : MonoBehaviour
         public UILineRenderer pitch, yaw, roll;
         public UILineRenderer accX, accY, accZ;
         public UILineRenderer magX, magY, magZ;
-        public UILineRenderer lonlat;
         public int samplesWidth = 10;
     }
+    [Serializable]
+    public class MapUI
+    {
+        public UILineRenderer graph;
+        public RectTransform pinpoint;
+        public Text distText;
+    }
+
 
     public TextUI textUI = new TextUI();
 
     public GraphUI graphUI = new GraphUI();
+
+    public MapUI mapUI = new MapUI();
 
     public UnityUITable.Table table;
 
@@ -66,14 +75,16 @@ public class UIVisualizer : MonoBehaviour
         void HandleGraph(UILineRenderer graph, Func<DroneUnit, float> fetchFunc)
         {
             var points = graph.Points;
-            if (points.Length != graphUI.samplesWidth)
-                points = new Vector2[graphUI.samplesWidth];
-            for (int i = 0; i < graphUI.samplesWidth; i++)
+            var length = Math.Min(graphUI.samplesWidth, manager.units.Count);
+            var start = data.index - length;
+            var end = data.index;
+
+            if (points.Length != length)
+                points = new Vector2[length];
+            for (int i = start; i < end; i++)
             {
-                var ii = data.index - graphUI.samplesWidth + i;
-                points[i] = new Vector2((float)i / (graphUI.samplesWidth - 1),
-                    ii < 0 ? 0 :
-                   Mathf.Repeat(fetchFunc(manager.units[ii]), 360) / 360); 
+                points[i - start] = new Vector2((float)(i - start) / (graphUI.samplesWidth - 1),
+                   Mathf.Repeat(fetchFunc(manager.units[i]), 360) / 360); 
             }
             graph.Points = points;
             graph.SetVerticesDirty();
@@ -88,6 +99,54 @@ public class UIVisualizer : MonoBehaviour
         HandleGraph(graphUI.magX, (x) => x.magX);
         HandleGraph(graphUI.magY, (x) => x.magY);
         HandleGraph(graphUI.magZ, (x) => x.magZ);
+
+        {
+            var points = mapUI.graph.Points;
+            var length = Math.Min(graphUI.samplesWidth, manager.units.Count);
+            var start = data.index - length;
+            var end = data.index;
+
+            if (points.Length != length)
+                points = new Vector2[length];
+            Vector2 rmin = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+            Vector2 rmax = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+            for (int i = start; i < end; i++)
+            {
+                rmin = Vector2.Min(rmin, manager.units[i].LonLat);
+                rmax = Vector2.Max(rmax, manager.units[i].LonLat);
+            }
+            Rect r = Rect.MinMaxRect(rmin.x, rmin.y, rmax.x, rmax.y);
+            {
+                // Minor adjustment
+                var center = r.center;
+                r.size = Vector2.one * Math.Max(r.height, r.width) * 1.1f;
+                r.center = center;
+            }
+            for (int i = start; i < end; i++)
+            {
+                var lonlat = manager.units[i].LonLat;
+                points[i - start] = new Vector2(Mathf.InverseLerp(r.xMin, r.xMax, lonlat.x), 
+                    Mathf.InverseLerp(r.yMin, r.yMax, lonlat.y));
+            }
+            mapUI.graph.Points = points;
+            mapUI.graph.SetVerticesDirty();
+            mapUI.pinpoint.anchorMin = mapUI.pinpoint.anchorMax = points[end - start - 1];
+            mapUI.distText.text = HaversineFunction(rmin.y, rmin.x, rmax.y, rmax.y).ToString("0.0m");
+        }
+    }
+
+    static float HaversineFunction(float lat1, float lon1, float lat2, float lon2)
+    {  // generally used geo measurement function
+        var R = 6378.137f; // Radius of earth in KM
+        
+        var dLat = lat2 * Mathf.Deg2Rad - lat1 * Mathf.Deg2Rad;
+        var dLon = lon2 * Mathf.Deg2Rad - lon1 * Mathf.Deg2Rad;
+        var a = Mathf.Sin(dLat / 2) * Mathf.Sin(dLat / 2) +
+        Mathf.Cos(lat1 * Mathf.PI / 180) * Mathf.Cos(lat2 * Mathf.Deg2Rad) *
+        Mathf.Sin(dLon / 2) * Mathf.Sin(dLon / 2);
+        var c = 2 * Mathf.Atan2(Mathf.Sqrt(a), Mathf.Sqrt(1 - a));
+        var d = R * c;
+        return d * 1000; // meters
     }
 
     private int lastCurrentIdx = -1;
@@ -101,7 +160,6 @@ public class UIVisualizer : MonoBehaviour
             lastCurrentIdx = current;
             ValidateUI();
         }
-
         else if (table.SelectedRow - 1 != current && table.SelectedRow != -1)
         {
             GetComponent<DataManager>().current = table.SelectedRow - 1;
