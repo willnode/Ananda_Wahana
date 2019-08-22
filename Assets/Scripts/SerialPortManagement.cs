@@ -12,6 +12,12 @@ public class SerialPortManagement : MonoBehaviour
 
     public Text portStatus;
 
+    public Text portConnectBtn;
+
+    public Selectable[] DisableIfDisconnected;
+
+    public Selectable[] DisableIfConnected;
+
     public int[] baudRates = new int[0];
 
     string[] ports;
@@ -23,6 +29,16 @@ public class SerialPortManagement : MonoBehaviour
     void UpdateStatus(string status)
     {
         portStatus.text = status;
+    }
+
+    public void UpdateUIStates()
+    {
+        var connected = IsConnected;
+        foreach (var item in DisableIfConnected)
+            item.interactable = !connected;
+        foreach (var item in DisableIfDisconnected)
+            item.interactable = connected;
+        portConnectBtn.text = connected ? "DISCONNECT" : "CONNECT";
     }
 
     public void ReloadPortLists()
@@ -50,12 +66,25 @@ public class SerialPortManagement : MonoBehaviour
     {
         if (portChoices.value >= 0 && baudrateChoices.value >= 0 && !IsConnected)
         {
-            serialPort = new SerialPort(ports[portChoices.value], baudRates[baudrateChoices.value]);
+            serialPort = new SerialPort(ports[portChoices.value], baudRates[baudrateChoices.value], Parity.None, 8, StopBits.One);
+
             serialPort.DataReceived += SerialPort_DataReceived;
             serialPort.ErrorReceived += SerialPort_ErrorReceived;
             serialPort.PinChanged += SerialPort_PinChanged;
-            serialPort.Open();
-            UpdateStatus("<color=lime>Koneksi OK</color>");
+
+            try
+            {
+                serialPort.Open();
+                UpdateStatus("<color=lime>Koneksi OK</color>");
+                serialPort.DiscardInBuffer();
+                serialPort.DiscardOutBuffer();
+                UpdateUIStates();
+            }
+            catch (Exception e)
+            {
+                UpdateStatus("<color=red>Koneksi Gagal</color> ("+e.Message.Trim()+")");
+                UpdateUIStates();
+            }
         }
     }
 
@@ -63,7 +92,7 @@ public class SerialPortManagement : MonoBehaviour
     {
         if (IsConnected)
         {
-            serialPort.Write(cmd);
+            serialPort.WriteLine(cmd);
         }
     }
 
@@ -85,13 +114,21 @@ public class SerialPortManagement : MonoBehaviour
             serialPort.Dispose();
             if (portStatus)
                 UpdateStatus("Koneksi Diputus");
+            UpdateUIStates();
         }
+    }
+
+    void Update()
+    {
+        if (IsConnected && serialPort.BytesToRead > 0)
+            SerialPort_DataReceived(null, null);
     }
 
     private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
     {
         var manager = GetComponent<DataManager>();
         var index = manager.NextIndex;
+
         var unit = DroneUnitSerializer.Parse(
             index + "," + 
             DateTimeOffset.UtcNow.ToUnixTimeSeconds() + "," + serialPort.ReadLine()
