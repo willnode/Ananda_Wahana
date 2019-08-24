@@ -94,13 +94,12 @@ public struct DroneUnit
     public long unixTime;
     public float pitch, yaw, roll;
     public float accX, accY, accZ;
-    public float magX, magY, magZ;
+    public float angle;
     public double lat, lng;
     public float alt, temp, pressure;
 
     public Vector3 YawPitchRoll => new Vector3(pitch, yaw, roll);
     public Vector3 Acceleration => new Vector3(accX, accY, accZ);
-    public Vector3 Magnitudo => new Vector3(magX, magY, magZ);
     public Vector3 LonLat => new Vector2((float)lng, (float)lat);
 
     public DateTime DateTime => DateTimeOffset.FromUnixTimeSeconds(unixTime).DateTime;
@@ -115,9 +114,7 @@ public struct DroneUnit
         accX = 0;
         accY = 0;
         accZ = 0;
-        magX = 0;
-        magY = 0;
-        magZ = 0;
+        angle = 0;
         lat = 0;
         lng = 0;
         alt = 0;
@@ -142,14 +139,12 @@ public static class DroneUnitSerializer
             accX = float.Parse(units[5]),
             accY = float.Parse(units[6]),
             accZ = float.Parse(units[7]),
-            magX = float.Parse(units[8]),
-            magY = float.Parse(units[9]),
-            magZ = float.Parse(units[10]),
-            lat = double.Parse(units[11]),
-            lng = double.Parse(units[12]),
-            alt = float.Parse(units[13]),
-            temp = float.Parse(units[14]),
-            pressure = float.Parse(units[15])
+            angle = float.Parse(units[8]),
+            lat = double.Parse(units[9]),
+            lng = double.Parse(units[10]),
+            alt = float.Parse(units[11]),
+            temp = float.Parse(units[12]),
+            pressure = float.Parse(units[13])
         };
         return unit;
     }
@@ -160,7 +155,7 @@ public static class DroneUnitSerializer
             unit.index.ToString(), unit.unixTime.ToString(),
             unit.pitch.ToString(), unit.yaw.ToString(), unit.roll.ToString(),
             unit.accX.ToString(), unit.accY.ToString(), unit.accZ.ToString(),
-            unit.magX.ToString(), unit.magY.ToString(), unit.magZ.ToString(),
+            unit.angle.ToString(),
             unit.lat.ToString(), unit.lng.ToString(), unit.alt.ToString(),
             unit.temp.ToString(), unit.pressure.ToString()
         });
@@ -188,9 +183,7 @@ public static class DroneUnitSerializer
             accX = randDegree(rndseed.accX),
             accY = randDegree(rndseed.accY),
             accZ = randDegree(rndseed.accZ),
-            magX = randDegree(rndseed.magX),
-            magY = randDegree(rndseed.magY),
-            magZ = randDegree(rndseed.magZ),
+            angle = randDegree(rndseed.angle),
             lat = randDegree((float)rndseed.lat),
             lng = randDegree((float)rndseed.lng),
             alt = randDist(rndseed.alt),

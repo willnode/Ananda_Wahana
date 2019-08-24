@@ -15,7 +15,7 @@ public class UIVisualizer : MonoBehaviour
         public Text index, datetime;
         public Text pitch, yaw, roll;
         public Text accX, accY, accZ;
-        public Text magX, magY, magZ;
+        public Text angle;
         public Text lat, lng, alt;
         public Text temp, pressure;
     }
@@ -24,7 +24,7 @@ public class UIVisualizer : MonoBehaviour
     {
         public UILineRenderer pitch, yaw, roll;
         public UILineRenderer accX, accY, accZ;
-        public UILineRenderer magX, magY, magZ;
+        public UILineRenderer angle;
         public int samplesWidth = 10;
     }
     [Serializable]
@@ -60,9 +60,7 @@ public class UIVisualizer : MonoBehaviour
         textUI.accX.text = data.accX.ToString("0.0°");
         textUI.accY.text = data.accY.ToString("0.0°");
         textUI.accZ.text = data.accZ.ToString("0.0°");
-        textUI.magX.text = data.magX.ToString("0.0°");
-        textUI.magY.text = data.magY.ToString("0.0°");
-        textUI.magZ.text = data.magZ.ToString("0.0°");
+        textUI.angle.text = data.angle.ToString("0.0°");
         textUI.lat.text = data.lat.ToString("0.000°");
         textUI.lng.text = data.lng.ToString("0.000°");
         textUI.alt.text = data.alt.ToString("0.0 m");
@@ -96,9 +94,7 @@ public class UIVisualizer : MonoBehaviour
         HandleGraph(graphUI.accX, (x) => x.accX);
         HandleGraph(graphUI.accY, (x) => x.accY);
         HandleGraph(graphUI.accZ, (x) => x.accZ);
-        HandleGraph(graphUI.magX, (x) => x.magX);
-        HandleGraph(graphUI.magY, (x) => x.magY);
-        HandleGraph(graphUI.magZ, (x) => x.magZ);
+        HandleGraph(graphUI.angle, (x) => x.angle);
 
         {
             var points = mapUI.graph.Points;

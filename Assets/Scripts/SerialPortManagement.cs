@@ -120,7 +120,7 @@ public class SerialPortManagement : MonoBehaviour
 
     void Update()
     {
-        if (IsConnected && serialPort.BytesToRead > 0)
+        while (IsConnected && serialPort.BytesToRead > 0)
             SerialPort_DataReceived(null, null);
     }
 
@@ -142,6 +142,7 @@ public class SerialPortManagement : MonoBehaviour
     {
         ReloadPortLists();
         ReloadBaudRates();
+        UpdateUIStates();
     }
 
     void OnDisable()
